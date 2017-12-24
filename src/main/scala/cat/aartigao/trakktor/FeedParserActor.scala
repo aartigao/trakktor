@@ -16,12 +16,12 @@ object FeedParserActor {
 
 class FeedParserActor(uri: Uri) extends Actor with ActorLogging {
 
-  override def preStart(): Unit = log.info("Feed Parser started")
-  override def postStop(): Unit = log.info("Feed Parser stopped")
+  override def preStart(): Unit = log.info("Feed Parser started for {}", uri)
+  override def postStop(): Unit = log.info("Feed Parser stopped for {}", uri)
 
   override def receive = {
     case CheckFeed ⇒
-      log.info("Feed has changed!")
+      log.info("Feed {} has changed!", uri)
   }
 
 }

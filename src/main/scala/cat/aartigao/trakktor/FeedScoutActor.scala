@@ -32,20 +32,20 @@ class FeedScoutActor(uri: Uri) extends Actor with Timers with ActorLogging {
 
   implicit val mat: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
-  val feedParser = context.actorOf(FeedParserActor(TrakktorConfig.FeedUrl), FeedParserActor.Name)
+  private val feedParser = context.actorOf(FeedParserActor(TrakktorConfig.FeedUrl), FeedParserActor.Name)
 
   override def preStart(): Unit = {
-    log.info("Feed Scout started")
+    log.info("Feed Scout started for {}", uri)
     schedulePollFeed(PollFeed(List(EmptyLastModified, EmptyETag)))
   }
 
-  override def postStop(): Unit = log.info("Feed Scout stopped")
+  override def postStop(): Unit = log.info("Feed Scout stopped for {}", uri)
 
   override def receive: Receive = {
     case PollFeed(headers) ⇒
       Http(context.system)
         .singleRequest(HttpRequest(HEAD, uri))
-        .map(extractHeadersAndDiscardBody(_))
+        .map(extractHeadersAndDiscardBody)
         .map(extractPollFeedResult(headers, _))
         .pipeTo(self)
 
