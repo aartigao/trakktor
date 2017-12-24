@@ -12,7 +12,7 @@ object TrakktorSupervisor {
 
 class TrakktorSupervisor extends Actor with ActorLogging {
 
-  val scout = context.actorOf(ScoutActor("http://feeds2.feedburner.com/newpctorrent?format=xml"), ScoutActor.Name)
+  val feedScout = context.actorOf(FeedScoutActor(TrakktorConfig.FeedUrl), FeedScoutActor.Name)
 
   override def preStart(): Unit = log.info("Trakktor Application started")
   override def postStop(): Unit = log.info("Trakktor Application stopped")
