@@ -12,16 +12,18 @@ object FeedScoutActor {
 
   def apply(url: String): Props = Props(new FeedScoutActor(Uri(url)))
 
-  object PollFeedTick
+  case object PollFeedTick
+
   case class PollFeed(headers: Seq[HttpHeader])
+
   case class PollFeedResult(headers: Seq[(HttpHeader, HttpHeader)])
 
 }
 
 class FeedScoutActor(uri: Uri) extends Actor with Timers with ActorLogging {
 
-  import FeedScoutActor._
   import FeedParserActor._
+  import FeedScoutActor._
   import akka.http.scaladsl.Http
   import akka.http.scaladsl.model.HttpMethods._
   import akka.pattern.pipe
@@ -30,7 +32,7 @@ class FeedScoutActor(uri: Uri) extends Actor with Timers with ActorLogging {
 
   import scala.concurrent.duration._
 
-  implicit val mat: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
+  private implicit val mat: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
   private val feedParser = context.actorOf(FeedParserActor(TrakktorConfig.FeedUrl), FeedParserActor.Name)
 
@@ -39,7 +41,10 @@ class FeedScoutActor(uri: Uri) extends Actor with Timers with ActorLogging {
     schedulePollFeed(PollFeed(List(EmptyLastModified, EmptyETag)))
   }
 
-  override def postStop(): Unit = log.info("Feed Scout stopped for {}", uri)
+  override def postStop(): Unit = {
+    mat.shutdown()
+    log.info("Feed Scout stopped for {}", uri)
+  }
 
   override def receive: Receive = {
     case PollFeed(headers) ⇒
@@ -50,7 +55,7 @@ class FeedScoutActor(uri: Uri) extends Actor with Timers with ActorLogging {
         .pipeTo(self)
 
     case PollFeedResult(results) ⇒
-      if (results.exists(header ⇒ header._1 != header._2)) feedParser ! CheckFeed
+      if (results.exists(header ⇒ header._1 != header._2)) feedParser ! FetchFeedItems
       schedulePollFeed(PollFeed(results.map(_._2)), 60 seconds)
   }
 
