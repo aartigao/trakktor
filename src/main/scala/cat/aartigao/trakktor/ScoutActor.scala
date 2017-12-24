@@ -6,15 +6,14 @@ import akka.http.scaladsl.model.headers.{ETag, `Last-Modified`}
 
 object ScoutActor {
 
-  val EmptyLastModified: `Last-Modified` = `Last-Modified`(DateTime.MinValue)
-  val EmptyETag: ETag = ETag("")
+  final val Name = "scout-actor"
+  final val EmptyLastModified: `Last-Modified` = `Last-Modified`(DateTime.MinValue)
+  final val EmptyETag: ETag = ETag("")
 
-  def props(url: String): Props = Props(new ScoutActor(Uri(url)))
+  def apply(url: String): Props = Props(new ScoutActor(Uri(url)))
 
   object PollTick
-
   case class Poll(headers: Seq[HttpHeader])
-
   case class PollResult(headers: Seq[(HttpHeader, HttpHeader)])
 
 }
